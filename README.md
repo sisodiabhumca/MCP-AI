@@ -169,8 +169,8 @@ if os.getenv('NEW_PLATFORM_TOKEN'):
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/sisodiabhumca/MCP-Slack.git
-cd MCP-Slack
+git clone https://github.com/sisodiabhumca/MCP-Collab.git
+cd MCP-Collab
 ```
 
 2. Install dependencies:
