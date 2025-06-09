@@ -1,86 +1,88 @@
-# MCP Slack Server
+# Multi-Channel Platform (MCP)
 
-A Python-based MCP server that integrates with Slack for real-time communication and collaboration.
+A flexible and extensible messaging platform integration service that supports multiple collaboration tools like Slack, Microsoft Teams, and more.
 
 ## Features
 
-- Real-time message handling
-- Webhook integration with Slack
-- Member join notifications
-- Custom message processing
-- Extensible architecture
+- Abstract interface for messaging platforms
+- Support for multiple platforms simultaneously
+- Easy to extend for new platforms
+- Handles common events (messages, member joins)
+- Configurable through environment variables
 
-## Prerequisites
+## Currently Supported Platforms
 
-- Python 3.8+
-- Slack workspace
-- Slack Bot Token
+- Slack
+- Microsoft Teams
 
-## Installation
+## Setup
 
-1. Clone this repository
+1. Clone the repository
 2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. Create a `.env` file with your platform credentials:
+
+   ```env
+   # Slack Configuration
+   SLACK_BOT_TOKEN=your-slack-bot-token
+
+   # Teams Configuration
+   TEAMS_WEBHOOK_URL=your-teams-webhook-url
+   TEAMS_TOKEN=your-teams-token
+
+   # General Configuration
+   PORT=3000
+   DEBUG=false
+   ```
+
+## Running the Application
+
 ```bash
-pip install -r requirements.txt
+python -m mcp.app
 ```
 
-## Configuration
+The server will start on port 3000 by default. You can change this by setting the `PORT` environment variable.
 
-1. Create a `.env` file in the root directory with your Slack Bot Token:
+## Adding a New Platform
+
+1. Create a new adapter in `mcp/adapters/` that implements the `MessagingPlatform` interface
+2. Register the platform in `PlatformFactory`
+3. Add configuration handling in `app.py`
+
+Example for adding a new platform:
+
+```python
+# 1. Create adapter (e.g., webex_adapter.py)
+class WebexAdapter(MessagingPlatform):
+    # Implement all required methods
+    pass
+
+# 2. Register in platform_factory.py
+PlatformFactory.register_platform('webex', WebexAdapter)
+
+# 3. Add configuration in app.py
+if os.getenv('WEBEX_TOKEN'):
+    webex = PlatformFactory.create_platform('webex')
+    webex.initialize({'token': os.getenv('WEBEX_TOKEN')})
+    platforms['webex'] = webex
 ```
-SLACK_BOT_TOKEN=xoxb-your-bot-token
-```
 
-2. Get your Slack Bot Token by:
-   - Going to https://api.slack.com/apps
-   - Creating a new app or selecting an existing one
-   - Under "OAuth & Permissions", install the app to your workspace
-   - Copy the Bot User OAuth Token
+## Webhook URLs
 
-## Running the Server
+Each platform has its own webhook endpoint:
 
-1. Start the server:
-```bash
-python mcp_slack_server.py
-```
+- Slack: `/webhook/slack`
+- Teams: `/webhook/teams`
 
-2. The server will run on `http://localhost:3000`
-
-## Webhook Setup
-
-1. In your Slack app configuration:
-   - Go to "Event Subscriptions"
-   - Enable Events
-   - Add Request URL: `http://your-server-url/webhook`
-   - Subscribe to bot events:
-     - `message.channels`
-     - `member_joined_channel`
-
-## Extending the Server
-
-To add new functionality:
-
-1. Add new event handlers in `mcp_slack_server.py`
-2. Implement custom message processing in `handle_message()`
-3. Add new webhook endpoints as needed
-
-## Error Handling
-
-The server includes basic error handling for:
-- Slack API errors
-- Webhook processing errors
-- Message sending failures
-
-## Security
-
-- Keep your Slack Bot Token secure
-- Never commit your `.env` file
-- Consider using environment variables in production
+Configure these URLs in your platform's webhook settings.
 
 ## Contributing
 
 1. Fork the repository
-2. Create your feature branch
+2. Create a feature branch
 3. Commit your changes
 4. Push to the branch
 5. Create a Pull Request
