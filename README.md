@@ -1,83 +1,189 @@
 # Multi-Channel Platform (MCP)
 
-A flexible and extensible messaging platform integration service that supports multiple collaboration tools like Slack, Microsoft Teams, and more.
+A flexible and extensible messaging platform integration service that supports multiple collaboration tools like Slack, Microsoft Teams, and more. This project implements a clean architecture pattern to make it easy to add support for new messaging platforms while maintaining a consistent interface.
+
+## Architecture
+
+The project follows a modular architecture with the following key components:
+
+### Core Components (`mcp/core/`)
+
+1. **Platform Interface** (`platform_interface.py`)
+   - Defines the abstract base class `MessagingPlatform`
+   - Specifies required methods for all platform implementations:
+     - `initialize()`: Platform-specific initialization
+     - `send_message()`: Message sending
+     - `handle_webhook()`: Webhook event processing
+     - `get_user_info()`: User information retrieval
+     - `handle_message()`: Message event handling
+     - `handle_member_join()`: Member join event handling
+
+2. **Platform Factory** (`platform_factory.py`)
+   - Implements the Factory pattern for creating platform instances
+   - Maintains a registry of available platforms
+   - Provides methods to:
+     - Register new platform types
+     - Create platform instances
+     - Manage platform configurations
+
+### Platform Adapters (`mcp/adapters/`)
+
+1. **Slack Adapter** (`slack_adapter.py`)
+   - Implements Slack-specific functionality
+   - Uses `slack_sdk` for API interactions
+   - Handles Slack events and message formats
+
+2. **Teams Adapter** (`teams_adapter.py`)
+   - Implements Microsoft Teams integration
+   - Uses Microsoft Graph API
+   - Handles Teams-specific events and message formats
+
+### Main Application (`mcp/app.py`)
+
+- Flask-based web application
+- Dynamic platform initialization
+- Webhook routing and handling
+- Environment-based configuration
+
+## Technical Implementation
+
+### Platform Interface
+
+```python
+class MessagingPlatform(ABC):
+    @abstractmethod
+    def initialize(self, config: Dict[str, Any]) -> None:
+        pass
+
+    @abstractmethod
+    def send_message(self, channel_id: str, message: str, **kwargs) -> bool:
+        pass
+
+    # ... other abstract methods
+```
+
+### Platform Factory
+
+```python
+class PlatformFactory:
+    _platforms: Dict[str, Type[MessagingPlatform]] = {
+        'slack': SlackAdapter,
+        'teams': TeamsAdapter
+    }
+
+    @classmethod
+    def create_platform(cls, platform_type: str) -> MessagingPlatform:
+        if platform_type not in cls._platforms:
+            raise ValueError(f"Unknown platform type: {platform_type}")
+        return cls._platforms[platform_type]()
+```
 
 ## Features
 
-- Abstract interface for messaging platforms
-- Support for multiple platforms simultaneously
-- Easy to extend for new platforms
-- Handles common events (messages, member joins)
-- Configurable through environment variables
+### Current Capabilities
 
-## Currently Supported Platforms
+1. **Multi-Platform Support**
+   - Simultaneous support for multiple messaging platforms
+   - Platform-specific webhook endpoints
+   - Unified message handling interface
 
-- Slack
-- Microsoft Teams
+2. **Event Handling**
+   - Message events
+   - Member join notifications
+   - Platform-specific custom events
 
-## Setup
+3. **Configuration Management**
+   - Environment-based configuration
+   - Platform-specific settings
+   - Dynamic platform initialization
 
-1. Clone the repository
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+### Extensibility
 
-3. Create a `.env` file with your platform credentials:
+The system is designed for easy extension:
 
-   ```env
-   # Slack Configuration
-   SLACK_BOT_TOKEN=your-slack-bot-token
+1. **Adding New Platforms**
+   - Create new adapter class
+   - Implement MessagingPlatform interface
+   - Register with PlatformFactory
+   - Add configuration in app.py
 
-   # Teams Configuration
-   TEAMS_WEBHOOK_URL=your-teams-webhook-url
-   TEAMS_TOKEN=your-teams-token
+2. **Custom Event Types**
+   - Extend platform adapters
+   - Add new event handlers
+   - Implement platform-specific logic
 
-   # General Configuration
-   PORT=3000
-   DEBUG=false
-   ```
+## Configuration
 
-## Running the Application
+### Environment Variables
 
-```bash
-python -m mcp.app
+```env
+# Slack Configuration
+SLACK_BOT_TOKEN=your-slack-bot-token
+
+# Teams Configuration
+TEAMS_WEBHOOK_URL=your-teams-webhook-url
+TEAMS_TOKEN=your-teams-token
+
+# General Configuration
+PORT=3000
+DEBUG=false
 ```
 
-The server will start on port 3000 by default. You can change this by setting the `PORT` environment variable.
-
-## Adding a New Platform
-
-1. Create a new adapter in `mcp/adapters/` that implements the `MessagingPlatform` interface
-2. Register the platform in `PlatformFactory`
-3. Add configuration handling in `app.py`
-
-Example for adding a new platform:
-
-```python
-# 1. Create adapter (e.g., webex_adapter.py)
-class WebexAdapter(MessagingPlatform):
-    # Implement all required methods
-    pass
-
-# 2. Register in platform_factory.py
-PlatformFactory.register_platform('webex', WebexAdapter)
-
-# 3. Add configuration in app.py
-if os.getenv('WEBEX_TOKEN'):
-    webex = PlatformFactory.create_platform('webex')
-    webex.initialize({'token': os.getenv('WEBEX_TOKEN')})
-    platforms['webex'] = webex
-```
-
-## Webhook URLs
-
-Each platform has its own webhook endpoint:
+### Webhook Endpoints
 
 - Slack: `/webhook/slack`
 - Teams: `/webhook/teams`
+- New platforms: `/webhook/<platform-name>`
 
-Configure these URLs in your platform's webhook settings.
+## Development
+
+### Adding a New Platform
+
+1. Create new adapter:
+```python
+class NewPlatformAdapter(MessagingPlatform):
+    def __init__(self):
+        self.client = None
+    
+    def initialize(self, config):
+        # Platform-specific initialization
+        pass
+    
+    # Implement other required methods
+```
+
+2. Register platform:
+```python
+PlatformFactory.register_platform('new_platform', NewPlatformAdapter)
+```
+
+3. Add configuration:
+```python
+if os.getenv('NEW_PLATFORM_TOKEN'):
+    platform = PlatformFactory.create_platform('new_platform')
+    platform.initialize({'token': os.getenv('NEW_PLATFORM_TOKEN')})
+    platforms['new_platform'] = platform
+```
+
+## Installation and Setup
+
+1. Clone the repository:
+```bash
+git clone https://github.com/sisodiabhumca/MCP-Slack.git
+cd MCP-Slack
+```
+
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+3. Configure environment variables in `.env`
+
+4. Run the application:
+```bash
+python -m mcp.app
+```
 
 ## Contributing
 
