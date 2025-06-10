@@ -1,6 +1,6 @@
-# Multi-Channel Platform (MCP)
+# Multi-Channel Platform (MCP) for AI Models
 
-A flexible and extensible messaging platform integration service that supports multiple collaboration tools like Slack, Microsoft Teams, and more. This project implements a clean architecture pattern to make it easy to add support for new messaging platforms while maintaining a consistent interface.
+A flexible and extensible AI model integration service that supports multiple AI providers like OpenAI, Google Gemini, and more. This project implements a clean architecture pattern to make it easy to add support for new AI models while maintaining a consistent interface.
 
 ## Architecture
 
@@ -8,161 +8,162 @@ The project follows a modular architecture with the following key components:
 
 ### Core Components (`mcp/core/`)
 
-1. **Platform Interface** (`platform_interface.py`)
-   - Defines the abstract base class `MessagingPlatform`
-   - Specifies required methods for all platform implementations:
-     - `initialize()`: Platform-specific initialization
-     - `send_message()`: Message sending
-     - `handle_webhook()`: Webhook event processing
-     - `get_user_info()`: User information retrieval
-     - `handle_message()`: Message event handling
-     - `handle_member_join()`: Member join event handling
+1. **AI Interface** (`ai_interface.py`)
+   - Defines the abstract base class `AIModel`
+   - Specifies required methods for all AI implementations:
+     - `initialize()`: Model-specific initialization
+     - `generate_text()`: Text generation
+     - `generate_chat_response()`: Chat completion
+     - `embed_text()`: Text embedding
+     - `analyze_image()`: Image analysis
+     - `moderate_content()`: Content moderation
 
-2. **Platform Factory** (`platform_factory.py`)
-   - Implements the Factory pattern for creating platform instances
-   - Maintains a registry of available platforms
+2. **AI Factory** (`ai_factory.py`)
+   - Implements the Factory pattern for creating AI model instances
+   - Maintains a registry of available models
    - Provides methods to:
-     - Register new platform types
-     - Create platform instances
-     - Manage platform configurations
+     - Register new model types
+     - Create model instances
+     - List available models
 
-### Platform Adapters (`mcp/adapters/`)
+### AI Model Adapters (`mcp/adapters/ai/`)
 
-1. **Slack Adapter** (`slack_adapter.py`)
-   - Implements Slack-specific functionality
-   - Uses `slack_sdk` for API interactions
-   - Handles Slack events and message formats
+1. **OpenAI Adapter** (`openai_adapter.py`)
+   - Implements OpenAI-specific functionality
+   - Supports GPT-4, DALL-E, and other OpenAI models
+   - Handles all OpenAI API features
 
-2. **Teams Adapter** (`teams_adapter.py`)
-   - Implements Microsoft Teams integration
-   - Uses Microsoft Graph API
-   - Handles Teams-specific events and message formats
-
-### Main Application (`mcp/app.py`)
-
-- Flask-based web application
-- Dynamic platform initialization
-- Webhook routing and handling
-- Environment-based configuration
-
-## Technical Implementation
-
-### Platform Interface
-
-```python
-class MessagingPlatform(ABC):
-    @abstractmethod
-    def initialize(self, config: Dict[str, Any]) -> None:
-        pass
-
-    @abstractmethod
-    def send_message(self, channel_id: str, message: str, **kwargs) -> bool:
-        pass
-
-    # ... other abstract methods
-```
-
-### Platform Factory
-
-```python
-class PlatformFactory:
-    _platforms: Dict[str, Type[MessagingPlatform]] = {
-        'slack': SlackAdapter,
-        'teams': TeamsAdapter
-    }
-
-    @classmethod
-    def create_platform(cls, platform_type: str) -> MessagingPlatform:
-        if platform_type not in cls._platforms:
-            raise ValueError(f"Unknown platform type: {platform_type}")
-        return cls._platforms[platform_type]()
-```
+2. **Gemini Adapter** (`gemini_adapter.py`)
+   - Implements Google Gemini integration
+   - Supports Gemini Pro and Gemini Pro Vision
+   - Handles all Gemini API features
 
 ## Features
 
 ### Current Capabilities
 
-1. **Multi-Platform Support**
-   - Simultaneous support for multiple messaging platforms
-   - Platform-specific webhook endpoints
-   - Unified message handling interface
+1. **Text Generation**
+   - Prompt completion
+   - Chat conversations
+   - Context-aware responses
 
-2. **Event Handling**
-   - Message events
-   - Member join notifications
-   - Platform-specific custom events
+2. **Image Processing**
+   - Image analysis
+   - Visual question answering
+   - Image description
 
-3. **Configuration Management**
-   - Environment-based configuration
-   - Platform-specific settings
-   - Dynamic platform initialization
+3. **Advanced Features**
+   - Text embeddings
+   - Content moderation
+   - Model-specific optimizations
 
-### Extensibility
+## API Endpoints
 
-The system is designed for easy extension:
+### Model Information
+- `GET /api/models`
+  - List all available models and their capabilities
 
-1. **Adding New Platforms**
-   - Create new adapter class
-   - Implement MessagingPlatform interface
-   - Register with PlatformFactory
-   - Add configuration in app.py
+### Text Generation
+- `POST /api/[model]/generate`
+  ```json
+  {
+    "prompt": "Your prompt here",
+    "options": {
+      "temperature": 0.7,
+      "max_tokens": 100
+    }
+  }
+  ```
 
-2. **Custom Event Types**
-   - Extend platform adapters
-   - Add new event handlers
-   - Implement platform-specific logic
+### Chat
+- `POST /api/[model]/chat`
+  ```json
+  {
+    "messages": [
+      {"role": "user", "content": "Hello"},
+      {"role": "assistant", "content": "Hi there!"},
+      {"role": "user", "content": "How are you?"}
+    ],
+    "options": {
+      "temperature": 0.7
+    }
+  }
+  ```
+
+### Embeddings
+- `POST /api/[model]/embed`
+  ```json
+  {
+    "text": "Text to embed",
+    "options": {}
+  }
+  ```
+
+### Image Analysis
+- `POST /api/[model]/analyze-image`
+  - Multipart form data:
+    - `image`: Image file
+    - `prompt`: Optional prompt/question about the image
+
+### Content Moderation
+- `POST /api/[model]/moderate`
+  ```json
+  {
+    "content": "Content to moderate"
+  }
+  ```
 
 ## Configuration
 
 ### Environment Variables
 
 ```env
-# Slack Configuration
-SLACK_BOT_TOKEN=your-slack-bot-token
+# OpenAI Configuration
+OPENAI_API_KEY=your-openai-api-key
+OPENAI_MODEL=gpt-4  # Optional
 
-# Teams Configuration
-TEAMS_WEBHOOK_URL=your-teams-webhook-url
-TEAMS_TOKEN=your-teams-token
+# Google Gemini Configuration
+GEMINI_API_KEY=your-gemini-api-key
+GEMINI_MODEL=gemini-pro  # Optional
 
-# General Configuration
+# Server Configuration
 PORT=3000
 DEBUG=false
 ```
 
-### Webhook Endpoints
-
-- Slack: `/webhook/slack`
-- Teams: `/webhook/teams`
-- New platforms: `/webhook/<platform-name>`
-
 ## Development
 
-### Adding a New Platform
+### Adding a New AI Model
 
 1. Create new adapter:
 ```python
-class NewPlatformAdapter(MessagingPlatform):
+class NewModelAdapter(AIModel):
     def __init__(self):
         self.client = None
+        self._capabilities = {
+            "text_generation": True,
+            "chat": True,
+            # ... other capabilities
+        }
     
     def initialize(self, config):
-        # Platform-specific initialization
+        # Model-specific initialization
         pass
     
     # Implement other required methods
 ```
 
-2. Register platform:
+2. Register model:
 ```python
-PlatformFactory.register_platform('new_platform', NewPlatformAdapter)
+AIModelFactory.register_model('new_model', NewModelAdapter)
 ```
 
 3. Add configuration:
 ```python
-if os.getenv('NEW_PLATFORM_TOKEN'):
-    platform = PlatformFactory.create_platform('new_platform')
-    platform.initialize({'token': os.getenv('NEW_PLATFORM_TOKEN')})
-    platforms['new_platform'] = platform
+if os.getenv('NEW_MODEL_API_KEY'):
+    model = AIModelFactory.create_model('new_model')
+    model.initialize({'api_key': os.getenv('NEW_MODEL_API_KEY')})
+    models['new_model'] = model
 ```
 
 ## Installation and Setup
@@ -178,7 +179,7 @@ cd MCP-Collab
 pip install -r requirements.txt
 ```
 
-3. Configure environment variables in `.env`
+3. Create `.env` file from template and configure API keys
 
 4. Run the application:
 ```bash
