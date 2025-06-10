@@ -1,4 +1,4 @@
-# Multi-Channel Platform (MCP) for AI Models
+# Model Context Protocol (MCP) for AI Models
 
 A flexible and extensible AI model integration service that supports multiple AI providers like OpenAI, Google Gemini, and more. This project implements a clean architecture pattern to make it easy to add support for new AI models while maintaining a consistent interface.
 
