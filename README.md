@@ -170,8 +170,8 @@ if os.getenv('NEW_MODEL_API_KEY'):
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/sisodiabhumca/MCP-Collab.git
-cd MCP-Collab
+git clone https://github.com/sisodiabhumca/MCP-AI.git
+cd MCP-AI
 ```
 
 2. Install dependencies:
