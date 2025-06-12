@@ -18,12 +18,16 @@ def initialize_models():
     """Initialize all configured AI models"""
     # Initialize OpenAI if configured
     if os.getenv('OPENAI_API_KEY'):
-        openai = AIModelFactory.create_model('openai')
-        openai.initialize({
-            'api_key': os.getenv('OPENAI_API_KEY'),
-            'model': os.getenv('OPENAI_MODEL', 'gpt-4')
-        })
-        models['openai'] = openai
+        try:
+            openai = AIModelFactory.create_model('openai')
+            openai.initialize({
+                'api_key': os.getenv('OPENAI_API_KEY'),
+                'model': os.getenv('OPENAI_MODEL', 'gpt-4')
+            })
+            models['openai'] = openai
+        except Exception as e:
+            print(f"Warning: Failed to initialize OpenAI: {str(e)}")
+            print("Continuing with other models...")
         
     # Initialize Gemini if configured
     if os.getenv('GEMINI_API_KEY'):
@@ -33,6 +37,16 @@ def initialize_models():
             'model': os.getenv('GEMINI_MODEL', 'gemini-pro')
         })
         models['gemini'] = gemini
+
+    # Initialize Local Llama if configured
+    if os.getenv('LOCAL_LLAMA_MODEL_PATH'):
+        local_llama = AIModelFactory.create_model('local_llama')
+        local_llama.initialize({
+            'model_path': os.getenv('LOCAL_LLAMA_MODEL_PATH'),
+            'n_gpu_layers': int(os.getenv('LOCAL_LLAMA_N_GPU_LAYERS', '-1')),
+            'n_ctx': int(os.getenv('LOCAL_LLAMA_N_CTX', '2048'))
+        })
+        models['local_llama'] = local_llama
 
 @app.route('/api/models', methods=['GET'])
 def list_models():
@@ -54,7 +68,7 @@ def generate_text(model: str):
         if not prompt:
             return jsonify({'error': 'No prompt provided'}), 400
             
-        result = models[model].generate_text(prompt, **data.get('options', {}))
+        result = models[model].generate_text(prompt, options=data.get('options', {}))
         return jsonify(result)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -130,15 +144,18 @@ def moderate_content(model: str):
         return jsonify({'error': str(e)}), 500
 
 def main():
-    """Main application entry point"""
-    initialize_models()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--port', type=int, default=3000, help='Port to run the server on')
+    args = parser.parse_args()
     
+    initialize_models()
     if not models:
         print("Warning: No AI models configured!")
         print("Please set up at least one model's API key in environment variables.")
         return
         
-    port = int(os.getenv('PORT', '3000'))
+    app.run(port=args.port)
     debug = os.getenv('DEBUG', 'false').lower() == 'true'
     
     app.run(port=port, debug=debug)

@@ -25,7 +25,9 @@ class OpenAIAdapter(AIModel):
         """Initialize the OpenAI client with configuration"""
         api_key = config.get('api_key')
         self.model = config.get('model', self.model)
-        self.client = OpenAI(api_key=api_key)
+        # The OpenAI v1.x client does not accept api_key in the constructor
+        # It should be set via environment variable or passed per-request
+        self.client = OpenAI()
         
     def generate_text(self, prompt: str, **kwargs) -> Dict[str, Any]:
         """Generate text using OpenAI's completion API"""

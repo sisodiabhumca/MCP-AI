@@ -3,13 +3,15 @@ from typing import Dict, Type
 from ..core.ai_interface import AIModel
 from ..adapters.ai.openai_adapter import OpenAIAdapter
 from ..adapters.ai.gemini_adapter import GeminiAdapter
+from ..adapters.ai.local_llama_adapter import LocalLlamaAdapter
 
 class AIModelFactory:
     """Factory class for creating AI model instances"""
     
     _models: Dict[str, Type[AIModel]] = {
         'openai': OpenAIAdapter,
-        'gemini': GeminiAdapter
+        'gemini': GeminiAdapter,
+        'local_llama': LocalLlamaAdapter
     }
     
     @classmethod
