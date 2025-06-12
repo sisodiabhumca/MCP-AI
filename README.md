@@ -1,6 +1,6 @@
 # Model Context Protocol (MCP) for AI Models
 
-A flexible and extensible AI model integration service that supports multiple AI providers like OpenAI, Google Gemini, and more. This project implements a clean architecture pattern to make it easy to add support for new AI models while maintaining a consistent interface.
+A flexible and extensible AI model integration service that supports multiple AI providers like OpenAI, Google Gemini, Claude, and local models like Llama 2. This project implements a clean architecture pattern to make it easy to add support for new AI models while maintaining a consistent interface.
 
 ## Architecture
 
@@ -38,6 +38,21 @@ The project follows a modular architecture with the following key components:
    - Supports Gemini Pro and Gemini Pro Vision
    - Handles all Gemini API features
 
+3. **Claude Adapter** (`claude_adapter.py`)
+   - Implements Anthropic's Claude integration
+   - Supports Claude 2 and Claude Instant
+   - Handles Claude-specific features and formatting
+
+4. **Llama Adapter** (`llama_adapter.py`)
+   - Implements Meta's Llama 2 integration via Hugging Face
+   - Supports Llama 2 chat models
+   - Handles Llama-specific chat formatting
+
+5. **Local Llama Adapter** (`local_llama_adapter.py`)
+   - Implements local Llama 2 model support using llama.cpp
+   - Supports GGUF model format
+   - Optimized for local inference
+
 ## Features
 
 ### Current Capabilities
@@ -56,6 +71,8 @@ The project follows a modular architecture with the following key components:
    - Text embeddings
    - Content moderation
    - Model-specific optimizations
+   - Local model inference
+   - Multi-model support
 
 ## API Endpoints
 
@@ -126,9 +143,70 @@ OPENAI_MODEL=gpt-4  # Optional
 GEMINI_API_KEY=your-gemini-api-key
 GEMINI_MODEL=gemini-pro  # Optional
 
+# Anthropic Claude Configuration
+ANTHROPIC_API_KEY=your-anthropic-api-key
+CLAUDE_MODEL=claude-2  # Optional
+
+# Local Llama Configuration
+LOCAL_LLAMA_MODEL_PATH=models/llama-2-7b-chat.Q4_K_M.gguf
+LOCAL_LLAMA_N_GPU_LAYERS=-1  # -1 for all layers, 0 for CPU only
+LOCAL_LLAMA_N_CTX=2048  # Context window size
+
 # Server Configuration
 PORT=3000
 DEBUG=false
+```
+
+## Installation and Setup
+
+1. Clone the repository:
+```bash
+git clone https://github.com/sisodiabhumca/MCP-AI.git
+cd MCP-AI
+```
+
+2. Create and activate virtual environment:
+```bash
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+```
+
+3. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+4. Download local model (optional):
+```bash
+# Using Python script
+python download_model.py
+
+# Or using shell script
+./download_model.sh
+```
+
+5. Create `.env` file from template:
+```bash
+cp .env.example .env
+```
+
+6. Configure your `.env` file with API keys and model settings
+
+7. Run the application:
+```bash
+python -m mcp.app
+```
+
+### Testing
+
+The project includes two test scripts:
+- `test_functionality.sh`: Basic functionality tests
+- `test_enhanced_features.sh`: Advanced feature tests
+
+Run the tests:
+```bash
+./test_functionality.sh
+./test_enhanced_features.sh
 ```
 
 ## Development
@@ -164,26 +242,6 @@ if os.getenv('NEW_MODEL_API_KEY'):
     model = AIModelFactory.create_model('new_model')
     model.initialize({'api_key': os.getenv('NEW_MODEL_API_KEY')})
     models['new_model'] = model
-```
-
-## Installation and Setup
-
-1. Clone the repository:
-```bash
-git clone https://github.com/sisodiabhumca/MCP-AI.git
-cd MCP-AI
-```
-
-2. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-3. Create `.env` file from template and configure API keys
-
-4. Run the application:
-```bash
-python -m mcp.app
 ```
 
 ## Contributing
